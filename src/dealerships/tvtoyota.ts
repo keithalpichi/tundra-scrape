@@ -6,10 +6,14 @@ class TVToyotaSite extends Site implements Scrapable {
     super({ id, url });
   }
   async scrape(context: BrowserContext) {
+    await this.scrapePage(context, this.url);
+  }
+
+  async scrapePage(context: BrowserContext, url: string) {
     try {
       await context.clearCookies();
       let page = await context.newPage();
-      await page.goto(this.url);
+      await page.goto(url);
       await page.locator("#hits").waitFor();
 
       const hits = await page.locator(".hit").all();
@@ -28,6 +32,13 @@ class TVToyotaSite extends Site implements Scrapable {
         }
         await this.scrapeVehicle(context, attr);
       }
+
+      const nextPageLocator = page.getByTestId("pagination-next-link");
+      const nextPageUrl = await nextPageLocator.getAttribute("href");
+      if (!nextPageUrl || nextPageUrl.length === 0 || nextPageUrl === "#") {
+        return;
+      }
+      await this.scrapePage(context, nextPageUrl);
     } catch (err) {
       console.error(err);
     }
