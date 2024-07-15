@@ -1,8 +1,10 @@
 import { firefox } from "playwright";
 import dealerships from "./dealerships";
+import { Inventory } from "./models";
 
 (async () => {
   try {
+    const inventory = new Inventory();
     const browser = await firefox.launch({
       headless: true,
     });
@@ -10,6 +12,7 @@ import dealerships from "./dealerships";
     for (const dealership of dealerships) {
       await dealership.scrape(context);
       for (const vehicle of dealership.vehicles) {
+        inventory.add(vehicle);
         console.log(
           `\nVehicle:\t\t\t${vehicle.year} ${vehicle.trim} ${vehicle.cab} ${vehicle.driveTrain}`,
         );
@@ -27,6 +30,7 @@ import dealerships from "./dealerships";
         );
       }
     }
+    console.log(`Found ${inventory.count} vehicles`);
     await context.close();
     await browser.close();
   } catch (err) {

@@ -139,3 +139,36 @@ export class Site {
     this.dealership = dealership;
   }
 }
+
+export class Inventory {
+  vehiclesByVIN: { [key: Vehicle["vin"]]: Vehicle } = {};
+  vehiclesByURL: { [key: Vehicle["url"]]: Vehicle } = {};
+  count: number = 0;
+
+  addMany(vehicles: Vehicle[]) {
+    vehicles.forEach(this.add);
+  }
+
+  add(vehicle: Vehicle) {
+    let count = 0;
+    if (!this.vehiclesByURL.hasOwnProperty(vehicle.url)) {
+      this.vehiclesByURL[vehicle.url] = vehicle;
+      count = 1;
+    }
+    if (!this.vehiclesByVIN.hasOwnProperty(vehicle.vin)) {
+      this.vehiclesByVIN[vehicle.vin] = vehicle;
+      count = 1;
+    }
+    this.count += count;
+  }
+
+  has(vehicle: Vehicle): boolean {
+    if (this.vehiclesByURL.hasOwnProperty(vehicle.url)) {
+      return true;
+    }
+    if (this.vehiclesByVIN.hasOwnProperty(vehicle.vin)) {
+      return true;
+    }
+    return false;
+  }
+}
