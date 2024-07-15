@@ -69,6 +69,7 @@ class ToyotaSite extends Site implements Scrapable {
 
       this.vehicles.push(
         new Vehicle({
+          url,
           exteriorColor: "", // TBD
           trim,
           year: Number(year),

@@ -101,6 +101,7 @@ class TVToyotaSite extends Site implements Scrapable {
 
       this.vehicles.push(
         new Vehicle({
+          url,
           exteriorColor,
           trim,
           year: Number(year),
