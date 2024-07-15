@@ -134,6 +134,16 @@ class CarEdge extends Site implements Scrapable {
         .locator("p:nth-child(3)")
         .innerText();
 
+      const exteriorColorLocator = page
+        .locator("#overview-and-features")
+        .getByRole("listitem")
+        .filter({ hasText: "Exterior:" });
+      const exteriorColorParts = (await exteriorColorLocator.innerText()).split(
+        ":",
+      );
+      const exteriorColor =
+        exteriorColorParts[exteriorColorParts.length - 1].trim();
+
       const dealership = new Dealership({
         name: dealershipName,
         location: dealershipLocation,
@@ -144,7 +154,7 @@ class CarEdge extends Site implements Scrapable {
       this.vehicles.push(
         new Vehicle({
           url,
-          exteriorColor: "", // TBD
+          exteriorColor,
           trim,
           year: Number(year),
           driveTrain,
