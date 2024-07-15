@@ -16,6 +16,7 @@ import dealerships from "./dealerships";
         console.log(`Exterior:\t${vehicle.exteriorColor}`);
         console.log(`Price:\t\t${vehicle.price}`);
         console.log(`Miles:\t\t${vehicle.mileage}`);
+        console.log(`Engine:\t\t${vehicle.engine}`);
         console.log(`Carfax:\t\t${vehicle.carFax || "Unknown"}`);
         console.log(`Vin:\t\t${vehicle.vin} (Stock ${vehicle.stock})`);
       }

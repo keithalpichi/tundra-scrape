@@ -13,6 +13,7 @@ export class Vehicle {
   price: string;
   mileage: string;
   vin: string;
+  engine: string;
   carFax?: string;
   stock?: string;
   constructor(args: {
@@ -24,6 +25,7 @@ export class Vehicle {
     price: string;
     mileage: string;
     vin: string;
+    engine: string;
     carFax?: string;
     stock?: string;
   }) {
@@ -35,6 +37,7 @@ export class Vehicle {
     this.price = args.price;
     this.mileage = args.mileage;
     this.vin = args.vin;
+    this.engine = args.engine;
     this.carFax = args.carFax;
     this.stock = args.stock;
   }

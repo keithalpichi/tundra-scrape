@@ -76,6 +76,13 @@ class TVToyotaSite extends Site implements Scrapable {
         .locator(".basic-info-item__value")
         .innerText();
 
+      const engineLocator = page
+        .locator(".basic-info-item")
+        .filter({ hasText: "Engine:" });
+      const engine = await engineLocator
+        .locator(".basic-info-item__value")
+        .innerText();
+
       const carFaxLocator = page.locator(".vdp-history-report__logo");
       const carFaxUrl = await carFaxLocator
         .getByRole("link")
@@ -91,6 +98,7 @@ class TVToyotaSite extends Site implements Scrapable {
           price,
           mileage,
           vin,
+          engine,
           stock,
           carFax: carFaxUrl || undefined,
         }),
