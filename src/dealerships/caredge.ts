@@ -103,6 +103,17 @@ class CarEdge extends Site implements Scrapable {
         .locator(".vdp-heading_detailValue__Ix4aU")
         .innerText();
 
+      const daysOnMarketLocator = page
+        .locator(".vdp-heading_vehicleDetails__FNYDL > p")
+        .last()
+        .filter({ hasText: "Days on Market:" });
+      const daysOnMarketString = await daysOnMarketLocator
+        .locator(".vdp-heading_detailValue__Ix4aU")
+        .innerText();
+      const daysOnMarket = Number.isNaN(Number(daysOnMarketString))
+        ? undefined
+        : Number(daysOnMarketString);
+
       this.vehicles.push(
         new Vehicle({
           exteriorColor: "", // TBD
@@ -116,6 +127,7 @@ class CarEdge extends Site implements Scrapable {
           engine: "NA", // TBD
           stock,
           carFax: undefined, // TBD
+          daysOnMarket,
         }),
       );
     } catch (err) {

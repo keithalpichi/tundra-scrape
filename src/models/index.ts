@@ -16,6 +16,7 @@ export class Vehicle {
   engine: string;
   carFax?: string;
   stock?: string;
+  daysOnMarket?: number;
   constructor(args: {
     exteriorColor: string;
     trim: string;
@@ -28,6 +29,7 @@ export class Vehicle {
     engine: string;
     carFax?: string;
     stock?: string;
+    daysOnMarket?: number;
   }) {
     this.exteriorColor = args.exteriorColor.toUpperCase();
     this.trim = this.parseTrim(args.trim);
@@ -40,6 +42,7 @@ export class Vehicle {
     this.engine = args.engine;
     this.carFax = args.carFax;
     this.stock = args.stock;
+    this.daysOnMarket = args.daysOnMarket;
   }
 
   parseTrim(trim: string): Trim {
