@@ -111,5 +111,5 @@ class TVToyotaSite extends Site implements Scrapable {
 
 export default new TVToyotaSite({
   id: "TVToyota",
-  url: "https://www.tvtoyota.com/used-vehicles/?_dFR%5Bmake%5D%5B0%5D=Toyota&_dFR%5Bmodel%5D%5B0%5D=Tundra&_dFR%5Btype%5D%5B0%5D=Used&_dFR%5Btype%5D%5B1%5D=Certified%2520Used&_dFR%5Byear%5D%5B0%5D=2017&_dFR%5Byear%5D%5B1%5D=2018&_dFR%5Byear%5D%5B2%5D=2021",
+  url: "https://www.tvtoyota.com/used-vehicles/?_dFR[make][0]=Toyota&_dFR[model][0]=Tundra&_dFR[type][0]=Used&_dFR[type][1]=Certified%2520Used&_dFR[year][0]=2016&_dFR[year][1]=2017&_dFR[year][2]=2018&_dFR[year][3]=2019&_dFR[year][4]=2020&_dFR[year][5]=2021",
 });
