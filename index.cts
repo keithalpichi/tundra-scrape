@@ -1,15 +1,77 @@
 import { firefox, BrowserContext } from "playwright";
 
-type Vehicle = {
-  model: "SR" | "SR5";
+type Unknown = "NA";
+type Trim = Unknown | "SR" | "SR5";
+type DriveTrain = Unknown | "2WD" | "4WD";
+type Cab = Unknown | "DC" | "CM";
+class Vehicle {
+  color: string;
+  trim: Trim;
   year: number;
-  driveTrain: "2WD" | "4WD";
-  cab: "DC" | "CM";
-  price: number;
-  mileage: number;
+  driveTrain: DriveTrain;
+  cab: Cab;
+  price: string;
+  mileage: string;
   vin: string;
   carFax?: string;
-};
+  stock?: string;
+  constructor(args: {
+    color: string;
+    trim: string;
+    year: number;
+    driveTrain: string;
+    cab: string;
+    price: string;
+    mileage: string;
+    vin: string;
+    carFax?: string;
+    stock?: string;
+  }) {
+    this.color = args.color.toUpperCase();
+    this.trim = this.parseTrim(args.trim);
+    this.year = Number(args.year);
+    this.driveTrain = this.parseDriveTrain(args.driveTrain);
+    this.cab = this.parseCab(args.cab);
+    this.price = args.price;
+    this.mileage = args.mileage;
+    this.vin = args.vin;
+    this.carFax = args.carFax;
+    this.stock = args.stock;
+  }
+
+  parseTrim(trim: string): Trim {
+    switch (trim.toUpperCase()) {
+      case "SR5":
+        return "SR5";
+      case "SR":
+        return "SR";
+      default:
+        return "NA";
+    }
+  }
+
+  parseDriveTrain(driveTrain: string): DriveTrain {
+    switch (driveTrain.toUpperCase()) {
+      case "2WD":
+        return "2WD";
+      case "4WD":
+        return "4WD";
+      default:
+        return "NA";
+    }
+  }
+
+  parseCab(cab: string): Cab {
+    switch (cab.toUpperCase()) {
+      case "DC":
+        return "DC";
+      case "CM":
+        return "CM";
+      default:
+        return "NA";
+    }
+  }
+}
 
 interface Scrapable {
   url: string;
@@ -67,16 +129,48 @@ class TVToyotaSite extends Site implements Scrapable {
       await page.goto(url, { waitUntil: "load" });
       const pageWaitLocator = page.locator("#whitewrap");
       await pageWaitLocator.waitFor();
+
+      const infoLocator = page.locator(".vdp-title__vehicle-info > h1");
+      const info = (await infoLocator.innerText())
+        .replace(/^(GOLD|SILVER)/, "")
+        .split(" ")
+        .filter((word) => word.length > 0);
+      const year = info[0];
+      const trim = info[3];
+      const driveTrain = info[4];
+      const cab = info[5];
+
       const ids = await page.locator("#vin").all();
-      let vin: string;
-      let stock: string;
+      let vin: string = "";
+      let stock: string = "";
       if (ids.length === 2) {
         vin = await ids[0].innerText();
         stock = await ids[1].innerText();
       }
       const priceLocator = page.locator(".price");
       const price = await priceLocator.innerText();
-      console.log(vin, stock, price);
+
+      const mileageLocator = page
+        .locator(".basic-info-item")
+        .filter({ hasText: "Mileage:" });
+      const mileage = await mileageLocator
+        .locator(".basic-info-item__value")
+        .innerText();
+
+      this.vehicles.push(
+        new Vehicle({
+          color: "NA", // for now
+          trim,
+          year: Number(year),
+          driveTrain,
+          cab,
+          price,
+          mileage,
+          vin,
+          carFax: undefined, // for now
+          stock: undefined, // for now
+        }),
+      );
     } catch (err) {
       console.error(err);
     }
