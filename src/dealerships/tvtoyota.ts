@@ -1,9 +1,9 @@
 import { BrowserContext } from "playwright";
-import { Site, Scrapable, Vehicle } from "../models";
+import { Site, Scrapable, Vehicle, Dealership } from "../models";
 
 class TVToyotaSite extends Site implements Scrapable {
-  constructor({ id, url }: { id: string; url: string }) {
-    super({ id, url });
+  constructor(args: { id: string; url: string; dealership: Dealership }) {
+    super(args);
   }
   async scrape(context: BrowserContext) {
     await this.scrapePage(context, this.url);
@@ -112,6 +112,7 @@ class TVToyotaSite extends Site implements Scrapable {
           engine,
           stock,
           carFax: carFaxUrl || undefined,
+          dealership: this.dealership!,
         }),
       );
     } catch (err) {
@@ -123,4 +124,10 @@ class TVToyotaSite extends Site implements Scrapable {
 export default new TVToyotaSite({
   id: "TVToyota",
   url: "https://www.tvtoyota.com/used-vehicles/?_dFR[make][0]=Toyota&_dFR[model][0]=Tundra&_dFR[type][0]=Used&_dFR[type][1]=Certified%2520Used&_dFR[year][0]=2016&_dFR[year][1]=2017&_dFR[year][2]=2018&_dFR[year][3]=2019&_dFR[year][4]=2020&_dFR[year][5]=2021",
+  dealership: new Dealership({
+    name: "TVToyota",
+    phone: "(951) 319-7911",
+    location: "26631 Ynez Road, Temecula, CA 92591",
+    url: "https://www.tvtoyota.com",
+  }),
 });

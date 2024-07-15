@@ -1,5 +1,23 @@
 import { BrowserContext } from "playwright";
 
+export class Dealership {
+  name: string;
+  phone: string;
+  location: string;
+  url: string;
+  constructor(args: {
+    phone: string;
+    name: string;
+    location: string;
+    url: string;
+  }) {
+    this.name = args.name;
+    this.phone = args.phone;
+    this.location = args.location.trim();
+    this.url = args.url;
+  }
+}
+
 type Unknown = "NA";
 type Trim = Unknown | "SR" | "SR5";
 type DriveTrain = Unknown | "2WD" | "4WD";
@@ -17,6 +35,7 @@ export class Vehicle {
   carFax?: string;
   stock?: string;
   daysOnMarket?: number;
+  dealership: Dealership;
   constructor(args: {
     exteriorColor: string;
     trim: string;
@@ -30,6 +49,7 @@ export class Vehicle {
     carFax?: string;
     stock?: string;
     daysOnMarket?: number;
+    dealership: Dealership;
   }) {
     this.exteriorColor = args.exteriorColor.toUpperCase();
     this.trim = this.parseTrim(args.trim);
@@ -40,6 +60,7 @@ export class Vehicle {
     this.mileage = args.mileage;
     this.vin = args.vin;
     this.engine = args.engine;
+    this.dealership = args.dealership;
     this.carFax = args.carFax;
     this.stock = args.stock;
     this.daysOnMarket = args.daysOnMarket;
@@ -94,10 +115,24 @@ export interface Scrapable {
 export class Site {
   id: string;
   url: string;
+  baseUrl?: string;
   vehicles: Vehicle[];
-  constructor({ id, url }: { id: string; url: string }) {
+  dealership?: Dealership;
+  constructor({
+    id,
+    url,
+    baseUrl,
+    dealership,
+  }: {
+    id: string;
+    url: string;
+    baseUrl?: string;
+    dealership?: Dealership;
+  }) {
     this.id = id;
     this.url = url;
+    this.baseUrl = baseUrl;
     this.vehicles = [];
+    this.dealership = dealership;
   }
 }

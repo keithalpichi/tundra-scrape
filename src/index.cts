@@ -22,6 +22,9 @@ import dealerships from "./dealerships";
         console.log(
           `Days on the market:\t\t${vehicle.daysOnMarket || "Unknown"}`,
         );
+        console.log(
+          `Dealership:\t\t\t${vehicle.dealership.name}, ${vehicle.dealership.location}. ${vehicle.dealership.url} (${vehicle.dealership.phone})`,
+        );
       }
     }
     await context.close();

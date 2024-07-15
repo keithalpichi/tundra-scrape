@@ -1,19 +1,9 @@
 import { BrowserContext } from "playwright";
-import { Site, Scrapable, Vehicle } from "../models";
+import { Site, Scrapable, Vehicle, Dealership } from "../models";
 
 class ToyotaSite extends Site implements Scrapable {
-  baseUrl: string;
-  constructor({
-    id,
-    url,
-    baseUrl,
-  }: {
-    id: string;
-    baseUrl: string;
-    url: string;
-  }) {
-    super({ id, url });
-    this.baseUrl = baseUrl;
+  constructor(args: { id: string; baseUrl: string; url: string }) {
+    super(args);
   }
   async scrape(context: BrowserContext) {
     await this.scrapePage(context, this.url);
@@ -90,6 +80,12 @@ class ToyotaSite extends Site implements Scrapable {
           engine: "NA", // TBD
           stock: "NA", // TBD
           carFax: undefined, // TBD
+          dealership: new Dealership({
+            name: "N/A",
+            url: "N/A",
+            phone: "N/A",
+            location: "N/A",
+          }), // TBD
         }),
       );
     } catch (err) {

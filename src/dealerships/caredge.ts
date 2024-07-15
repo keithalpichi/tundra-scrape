@@ -1,19 +1,9 @@
 import { BrowserContext } from "playwright";
-import { Site, Scrapable, Vehicle } from "../models";
+import { Site, Scrapable, Vehicle, Dealership } from "../models";
 
 class CarEdge extends Site implements Scrapable {
-  baseUrl: string;
-  constructor({
-    id,
-    url,
-    baseUrl,
-  }: {
-    id: string;
-    baseUrl: string;
-    url: string;
-  }) {
-    super({ id, url });
-    this.baseUrl = baseUrl;
+  constructor(args: { id: string; baseUrl: string; url: string }) {
+    super(args);
   }
   async scrape(context: BrowserContext) {
     await this.scrapePage(context, this.url);
@@ -114,6 +104,31 @@ class CarEdge extends Site implements Scrapable {
         ? undefined
         : Number(daysOnMarketString);
 
+      const dealershipLocator = page.locator(
+        ".seller-details_sellerContactInfo__QA4Aq",
+      );
+      const dealershipNameLocator = dealershipLocator.locator(
+        "#vdpSellerDetailsUrl",
+      );
+      const dealershipUrl =
+        (await dealershipNameLocator.getAttribute("href")) || "Unknown";
+      const dealershipName = await dealershipNameLocator
+        .getByRole("paragraph")
+        .innerText();
+      const dealershipLocation = await dealershipLocator
+        .locator("p:nth-child(2)")
+        .innerText();
+      const dealershipPhone = await dealershipLocator
+        .locator("p:nth-child(3)")
+        .innerText();
+
+      const dealership = new Dealership({
+        name: dealershipName,
+        location: dealershipLocation,
+        url: dealershipUrl,
+        phone: dealershipPhone,
+      });
+
       this.vehicles.push(
         new Vehicle({
           exteriorColor: "", // TBD
@@ -128,6 +143,7 @@ class CarEdge extends Site implements Scrapable {
           stock,
           carFax: undefined, // TBD
           daysOnMarket,
+          dealership,
         }),
       );
     } catch (err) {
