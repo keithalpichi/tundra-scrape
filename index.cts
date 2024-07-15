@@ -5,7 +5,7 @@ type Trim = Unknown | "SR" | "SR5";
 type DriveTrain = Unknown | "2WD" | "4WD";
 type Cab = Unknown | "DC" | "CM";
 class Vehicle {
-  color: string;
+  exteriorColor: string;
   trim: Trim;
   year: number;
   driveTrain: DriveTrain;
@@ -16,7 +16,7 @@ class Vehicle {
   carFax?: string;
   stock?: string;
   constructor(args: {
-    color: string;
+    exteriorColor: string;
     trim: string;
     year: number;
     driveTrain: string;
@@ -27,7 +27,7 @@ class Vehicle {
     carFax?: string;
     stock?: string;
   }) {
-    this.color = args.color.toUpperCase();
+    this.exteriorColor = args.exteriorColor.toUpperCase();
     this.trim = this.parseTrim(args.trim);
     this.year = Number(args.year);
     this.driveTrain = this.parseDriveTrain(args.driveTrain);
@@ -52,6 +52,7 @@ class Vehicle {
 
   parseDriveTrain(driveTrain: string): DriveTrain {
     switch (driveTrain.toUpperCase()) {
+      case "RWD":
       case "2WD":
         return "2WD";
       case "4WD":
@@ -63,8 +64,10 @@ class Vehicle {
 
   parseCab(cab: string): Cab {
     switch (cab.toUpperCase()) {
+      case "DOUBLECAB":
       case "DC":
         return "DC";
+      case "CREWMAX":
       case "CM":
         return "CM";
       default:
@@ -74,6 +77,7 @@ class Vehicle {
 }
 
 interface Scrapable {
+  vehicles: Vehicle[];
   url: string;
   scrape: (context: BrowserContext) => void;
 }
@@ -157,9 +161,21 @@ class TVToyotaSite extends Site implements Scrapable {
         .locator(".basic-info-item__value")
         .innerText();
 
+      const exteriorColorLocator = page
+        .locator(".basic-info-item")
+        .filter({ hasText: "Exterior:" });
+      const exteriorColor = await exteriorColorLocator
+        .locator(".basic-info-item__value")
+        .innerText();
+
+      const carFaxLocator = page.locator(".vdp-history-report__logo");
+      const carFaxUrl = await carFaxLocator
+        .getByRole("link")
+        .getAttribute("href");
+
       this.vehicles.push(
         new Vehicle({
-          color: "NA", // for now
+          exteriorColor,
           trim,
           year: Number(year),
           driveTrain,
@@ -167,8 +183,8 @@ class TVToyotaSite extends Site implements Scrapable {
           price,
           mileage,
           vin,
-          carFax: undefined, // for now
-          stock: undefined, // for now
+          stock,
+          carFax: carFaxUrl || undefined,
         }),
       );
     } catch (err) {
@@ -201,6 +217,15 @@ const sites: Scrapable[] = [
     }
     for (const site of sites) {
       await site.scrape(context);
+      for (const vehicle of site.vehicles) {
+        console.log(
+          `\nVehicle:\t${vehicle.year} ${vehicle.trim} ${vehicle.cab} ${vehicle.driveTrain}`,
+        );
+        console.log(`Price:\t\t${vehicle.price}`);
+        console.log(`Miles:\t\t${vehicle.mileage}`);
+        console.log(`Carfax:\t\t${vehicle.carFax || "Unknown"}`);
+        console.log(`Vin:\t\t${vehicle.vin} (Stock ${vehicle.stock})`);
+      }
     }
     await context.close();
     await browser.close();
