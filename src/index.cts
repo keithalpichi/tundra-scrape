@@ -7,10 +7,6 @@ import dealerships from "./dealerships";
       headless: true,
     });
     const context = await browser.newContext();
-    if (!browser) {
-      console.log("no browser");
-      return;
-    }
     for (const dealership of dealerships) {
       await dealership.scrape(context);
       for (const vehicle of dealership.vehicles) {
