@@ -13,6 +13,7 @@ import dealerships from "./dealerships";
         console.log(
           `\nVehicle:\t${vehicle.year} ${vehicle.trim} ${vehicle.cab} ${vehicle.driveTrain}`,
         );
+        console.log(`Exterior:\t${vehicle.exteriorColor}`);
         console.log(`Price:\t\t${vehicle.price}`);
         console.log(`Miles:\t\t${vehicle.mileage}`);
         console.log(`Carfax:\t\t${vehicle.carFax || "Unknown"}`);
