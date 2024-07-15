@@ -1,21 +1,26 @@
-import { BrowserContext } from "playwright";
+import { BrowserContext, Page } from "playwright";
 import { Site, Scrapable, Vehicle, Dealership } from "../models";
 
 class CarEdge extends Site implements Scrapable {
+  page: number = 1;
   constructor(args: { id: string; baseUrl: string; url: string }) {
     super(args);
   }
   async scrape(context: BrowserContext) {
-    await this.scrapePage(context, this.url);
+    await context.clearCookies();
+    let page = await context.newPage();
+    await page.goto(this.url);
+    await this.scrapePage(context, page);
   }
 
-  async scrapePage(context: BrowserContext, url: string) {
+  async scrapePage(context: BrowserContext, page: Page) {
     try {
       await context.clearCookies();
-      let page = await context.newPage();
-      await page.goto(url);
+      const welcomeModalLocator = page.getByText("Got it! Take me to listings");
+      if ((await welcomeModalLocator.count()) === 1) {
+        welcomeModalLocator.click();
+      }
       await page.locator(".listings_cardContainer__SbXnS").waitFor();
-
       const hits = await page
         .locator(".vehicle-card_vehicleCardContainer___2DV3")
         .all();
@@ -31,12 +36,19 @@ class CarEdge extends Site implements Scrapable {
         await this.scrapeVehicle(context, `${this.baseUrl}${attr}`);
       }
 
-      // const nextPageLocator = page.getByTestId("pagination-next-link");
-      // const nextPageUrl = await nextPageLocator.getAttribute("href");
-      // if (!nextPageUrl || nextPageUrl.length === 0 || nextPageUrl === "#") {
-      //   return;
-      // }
-      // await this.scrapePage(context, nextPageUrl);
+      const paginationLocator = page.getByTestId("pagination");
+      const pageLinkLocator = paginationLocator
+        .locator("a")
+        .filter({ hasText: String(this.page + 1) });
+      const foundNextPage = (await pageLinkLocator.count()) === 1;
+      if (!foundNextPage) {
+        return;
+      }
+      this.page += 1;
+      console.log(`Going to page ${this.page}`);
+      await pageLinkLocator.click();
+      await page.waitForLoadState();
+      await this.scrapePage(context, page);
     } catch (err) {
       console.error(err);
     }
