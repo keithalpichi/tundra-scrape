@@ -204,11 +204,6 @@ const sites: Scrapable[] = [
   try {
     const browser = await firefox.launch({
       headless: true,
-      // logger: {
-      //   isEnabled: () => true,
-      //   log: (name, severity, message, args) =>
-      //     console.log(`${name} ${message}`),
-      // },
     });
     const context = await browser.newContext();
     if (!browser) {
