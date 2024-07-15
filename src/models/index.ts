@@ -55,9 +55,12 @@ export class Vehicle {
 
   parseDriveTrain(driveTrain: string): DriveTrain {
     switch (driveTrain.toUpperCase()) {
+      case "FWD":
       case "RWD":
+      case "4x2":
       case "2WD":
         return "2WD";
+      case "4X4":
       case "4WD":
         return "4WD";
       default:
