@@ -1,19 +1,20 @@
 import { BrowserContext, Page } from "playwright";
-import { Site, Scrapable, Vehicle, Dealership } from "../models";
+import { Site, Scrapable, Vehicle, Dealership, Inventory } from "../models";
 
 class CarEdge extends Site implements Scrapable {
   page: number = 1;
   constructor(args: { id: string; baseUrl: string; url: string }) {
     super(args);
   }
-  async scrape(context: BrowserContext) {
+  async scrape(context: BrowserContext, inventory: Inventory) {
     await context.clearCookies();
     let page = await context.newPage();
     await page.goto(this.url);
-    await this.scrapePage(context, page);
+    await this.scrapePage(context, page, inventory);
+    inventory.addMany(this.vehicles);
   }
 
-  async scrapePage(context: BrowserContext, page: Page) {
+  async scrapePage(context: BrowserContext, page: Page, inventory: Inventory) {
     try {
       await context.clearCookies();
       const welcomeModalLocator = page.getByText("Got it! Take me to listings");
@@ -33,7 +34,7 @@ class CarEdge extends Site implements Scrapable {
         if (!attr) {
           continue;
         }
-        await this.scrapeVehicle(context, `${this.baseUrl}${attr}`);
+        await this.scrapeVehicle(context, `${this.baseUrl}${attr}`, inventory);
       }
 
       const paginationLocator = page.getByTestId("pagination");
@@ -45,31 +46,25 @@ class CarEdge extends Site implements Scrapable {
         return;
       }
       this.page += 1;
-      console.log(`Going to page ${this.page}`);
       await pageLinkLocator.click();
       await page.waitForLoadState();
-      await this.scrapePage(context, page);
+      await this.scrapePage(context, page, inventory);
     } catch (err) {
       console.error(err);
     }
   }
 
-  async scrapeVehicle(context: BrowserContext, url: string) {
+  async scrapeVehicle(
+    context: BrowserContext,
+    url: string,
+    inventory: Inventory,
+  ) {
     try {
-      console.log(`Scraping vehicle data from ${url}`);
       await context.clearCookies();
       let page = await context.newPage();
       await page.goto(url, { waitUntil: "load" });
       const pageWaitLocator = page.locator("#ceWideMain");
       await pageWaitLocator.waitFor();
-
-      const infoLocator = page.locator(
-        ".vdp-heading_detailsContainer__sFJv1 > h1",
-      );
-      const info = (await infoLocator.innerText()).split(" ");
-      const year = info[0];
-      const trim = info[3];
-      const driveTrain = info[4];
 
       const vinParentLocator = page
         .locator(".vdp-heading_vehicleDetails__FNYDL > p")
@@ -79,6 +74,20 @@ class CarEdge extends Site implements Scrapable {
       const vin = await vinParentLocator
         .locator(".vdp-heading_detailValue__Ix4aU")
         .innerText();
+
+      if (inventory.hasVehicleByVIN(vin)) {
+        // console.log(`Vehicle with VIN ${vin} has already been scraped`);
+        return;
+      }
+      console.log(`New vehicle with VIN ${vin} found`);
+
+      const infoLocator = page.locator(
+        ".vdp-heading_detailsContainer__sFJv1 > h1",
+      );
+      const info = (await infoLocator.innerText()).split(" ");
+      const year = info[0];
+      const trim = info[3];
+      const driveTrain = info[4];
 
       const stockParentLocator = page
         .locator(".vdp-heading_vehicleDetails__FNYDL > p")
@@ -167,6 +176,7 @@ class CarEdge extends Site implements Scrapable {
           carFax: undefined, // TBD
           daysOnMarket,
           dealership,
+          dateFound: new Date(),
         }),
       );
     } catch (err) {

@@ -1,15 +1,16 @@
 import { BrowserContext } from "playwright";
-import { Site, Scrapable, Vehicle, Dealership } from "../models";
+import { Site, Scrapable, Vehicle, Dealership, Inventory } from "../models";
 
 class ToyotaSite extends Site implements Scrapable {
   constructor(args: { id: string; baseUrl: string; url: string }) {
     super(args);
   }
-  async scrape(context: BrowserContext) {
-    await this.scrapePage(context, this.url);
+  async scrape(context: BrowserContext, inventory: Inventory) {
+    await this.scrapePage(context, this.url, inventory);
+    inventory.addMany(this.vehicles);
   }
 
-  async scrapePage(context: BrowserContext, url: string) {
+  async scrapePage(context: BrowserContext, url: string, inventory: Inventory) {
     try {
       await context.clearCookies();
       let page = await context.newPage();
@@ -23,7 +24,11 @@ class ToyotaSite extends Site implements Scrapable {
         if (!vehicleUrl) {
           continue;
         }
-        await this.scrapeVehicle(context, `${this.baseUrl}${vehicleUrl}`);
+        await this.scrapeVehicle(
+          context,
+          `${this.baseUrl}${vehicleUrl}`,
+          inventory,
+        );
       }
 
       // const nextPageLocator = page.getByTestId("pagination-next-link");
@@ -37,14 +42,26 @@ class ToyotaSite extends Site implements Scrapable {
     }
   }
 
-  async scrapeVehicle(context: BrowserContext, url: string) {
+  async scrapeVehicle(
+    context: BrowserContext,
+    url: string,
+    inventory: Inventory,
+  ) {
     try {
-      console.log(`Scraping vehicle data from ${url}`);
       await context.clearCookies();
       let page = await context.newPage();
       await page.goto(url, { waitUntil: "load" });
       const pageWaitLocator = page.locator("#vehicleDetails");
       await pageWaitLocator.waitFor();
+
+      const vinLocator = page.locator(".styles_vdpLink__O8qoB");
+      const vin = (await vinLocator.innerText()).replace("VIN", "");
+
+      if (inventory.hasVehicleByVIN(vin)) {
+        // console.log(`Vehicle with VIN ${vin} has already been scraped`);
+        return;
+      }
+      console.log(`New vehicle with VIN ${vin} found`);
 
       const infoLocator = page.locator(
         ".styles_vehicleDescription__+xD6y > h3",
@@ -61,9 +78,6 @@ class ToyotaSite extends Site implements Scrapable {
 
       const priceLocator = page.locator(".styles_price__zRedZ");
       const price = await priceLocator.innerText();
-
-      const vinLocator = page.locator(".styles_vdpLink__O8qoB");
-      const vin = (await vinLocator.innerText()).replace("VIN", "");
 
       // const carFaxLocator = page.locator('.carfax')
 
@@ -87,6 +101,7 @@ class ToyotaSite extends Site implements Scrapable {
             phone: "N/A",
             location: "N/A",
           }), // TBD
+          dateFound: new Date(),
         }),
       );
     } catch (err) {

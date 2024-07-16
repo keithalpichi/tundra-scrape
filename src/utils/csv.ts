@@ -18,6 +18,7 @@ export default class CSV {
     phone: 11,
     vin: 12,
     stock: 13,
+    dateFound: 14,
   };
   async read(path: string): Promise<Inventory> {
     return new Promise(async (res, rej) => {
@@ -39,6 +40,11 @@ export default class CSV {
               location: row[CSV.headerIndices.location],
               url: "NA",
             });
+            const dateFound =
+              new Date(row[CSV.headerIndices.dateFound]).toString() ===
+              "Invalid Date"
+                ? undefined
+                : new Date(row[CSV.headerIndices.dateFound]);
             const vehicle = new Vehicle({
               exteriorColor: row[CSV.headerIndices.exteriorColor],
               trim: row[CSV.headerIndices.trim],
@@ -57,6 +63,7 @@ export default class CSV {
               url: row[CSV.headerIndices.url],
               stock: row[CSV.headerIndices.stock],
               engine: "NA",
+              dateFound,
             });
             inventory.add(vehicle);
           })
@@ -84,6 +91,7 @@ export default class CSV {
       "phone",
       "vin",
       "stock",
+      "dateFound",
     ];
     const rows = [header];
     for (const vin in inventory.vehiclesByVIN) {
@@ -95,7 +103,7 @@ export default class CSV {
         vehicle.driveTrain,
         vehicle.exteriorColor,
         vehicle.mileage,
-        String(vehicle.daysOnMarket) || "NA",
+        vehicle.daysOnMarket ? String(vehicle.daysOnMarket) : "",
         vehicle.price,
         vehicle.url,
         vehicle.dealership.name,
@@ -103,6 +111,7 @@ export default class CSV {
         vehicle.dealership.phone,
         vehicle.vin,
         vehicle.stock || "NA",
+        vehicle.dateFound ? vehicle.dateFound.toUTCString() : "",
       ]);
     }
     return new Promise((res, rej) => {

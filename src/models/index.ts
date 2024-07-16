@@ -23,6 +23,7 @@ type Trim = Unknown | "SR" | "SR5";
 type DriveTrain = Unknown | "2WD" | "4WD";
 type Cab = Unknown | "DC" | "CM";
 export class Vehicle {
+  dateFound?: Date;
   exteriorColor: string;
   trim: Trim;
   year: number;
@@ -52,6 +53,7 @@ export class Vehicle {
     daysOnMarket?: number;
     dealership: Dealership;
     url: string;
+    dateFound?: Date;
   }) {
     this.exteriorColor = args.exteriorColor.toUpperCase();
     this.trim = this.parseTrim(args.trim);
@@ -67,6 +69,7 @@ export class Vehicle {
     this.stock = args.stock;
     this.daysOnMarket = args.daysOnMarket;
     this.url = args.url;
+    this.dateFound = args.dateFound;
   }
 
   parseTrim(trim: string): Trim {
@@ -112,7 +115,7 @@ export class Vehicle {
 export interface Scrapable {
   vehicles: Vehicle[];
   url: string;
-  scrape: (context: BrowserContext) => void;
+  scrape: (context: BrowserContext, inventory: Inventory) => void;
 }
 
 export class Site {
@@ -146,7 +149,7 @@ export class Inventory {
   count: number = 0;
 
   addMany(vehicles: Vehicle[]) {
-    vehicles.forEach(this.add);
+    vehicles.forEach((vehicle) => this.add(vehicle));
   }
 
   add(vehicle: Vehicle) {
@@ -167,6 +170,20 @@ export class Inventory {
       return true;
     }
     if (this.vehiclesByVIN.hasOwnProperty(vehicle.vin)) {
+      return true;
+    }
+    return false;
+  }
+
+  hasVehicleByVIN(vin: Vehicle["vin"]): boolean {
+    if (this.vehiclesByVIN.hasOwnProperty(vin)) {
+      return true;
+    }
+    return false;
+  }
+
+  hasVehicleByURL(url: Vehicle["url"]): boolean {
+    if (this.vehiclesByURL.hasOwnProperty(url)) {
       return true;
     }
     return false;

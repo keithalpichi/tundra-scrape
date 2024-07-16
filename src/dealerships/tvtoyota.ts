@@ -1,15 +1,16 @@
 import { BrowserContext } from "playwright";
-import { Site, Scrapable, Vehicle, Dealership } from "../models";
+import { Site, Scrapable, Vehicle, Dealership, Inventory } from "../models";
 
 class TVToyotaSite extends Site implements Scrapable {
   constructor(args: { id: string; url: string; dealership: Dealership }) {
     super(args);
   }
-  async scrape(context: BrowserContext) {
-    await this.scrapePage(context, this.url);
+  async scrape(context: BrowserContext, inventory: Inventory) {
+    await this.scrapePage(context, this.url, inventory);
+    inventory.addMany(this.vehicles);
   }
 
-  async scrapePage(context: BrowserContext, url: string) {
+  async scrapePage(context: BrowserContext, url: string, inventory: Inventory) {
     try {
       await context.clearCookies();
       let page = await context.newPage();
@@ -30,7 +31,7 @@ class TVToyotaSite extends Site implements Scrapable {
         if (!attr) {
           continue;
         }
-        await this.scrapeVehicle(context, attr);
+        await this.scrapeVehicle(context, attr, inventory);
       }
 
       const nextPageLocator = page.getByTestId("pagination-next-link");
@@ -38,20 +39,37 @@ class TVToyotaSite extends Site implements Scrapable {
       if (!nextPageUrl || nextPageUrl.length === 0 || nextPageUrl === "#") {
         return;
       }
-      await this.scrapePage(context, nextPageUrl);
+      await this.scrapePage(context, nextPageUrl, inventory);
     } catch (err) {
       console.error(err);
     }
   }
 
-  async scrapeVehicle(context: BrowserContext, url: string) {
+  async scrapeVehicle(
+    context: BrowserContext,
+    url: string,
+    inventory: Inventory,
+  ) {
     try {
-      console.log(`Scraping vehicle data from ${url}`);
       await context.clearCookies();
       let page = await context.newPage();
       await page.goto(url, { waitUntil: "load" });
       const pageWaitLocator = page.locator("#whitewrap");
       await pageWaitLocator.waitFor();
+
+      const ids = await page.locator("#vin").all();
+      let vin: string = "";
+      let stock: string = "";
+      if (ids.length === 2) {
+        vin = await ids[0].innerText();
+        stock = await ids[1].innerText();
+      }
+
+      if (inventory.hasVehicleByVIN(vin)) {
+        // console.log(`Vehicle with VIN ${vin} has already been scraped`);
+        return;
+      }
+      console.log(`New vehicle with VIN ${vin} found`);
 
       const infoLocator = page.locator(".vdp-title__vehicle-info > h1");
       const info = (await infoLocator.innerText())
@@ -63,13 +81,6 @@ class TVToyotaSite extends Site implements Scrapable {
       const driveTrain = info[4];
       const cab = info[5];
 
-      const ids = await page.locator("#vin").all();
-      let vin: string = "";
-      let stock: string = "";
-      if (ids.length === 2) {
-        vin = await ids[0].innerText();
-        stock = await ids[1].innerText();
-      }
       const priceLocator = page.locator(".price");
       const price = await priceLocator.innerText();
 
@@ -114,6 +125,7 @@ class TVToyotaSite extends Site implements Scrapable {
           stock,
           carFax: carFaxUrl || undefined,
           dealership: this.dealership!,
+          dateFound: new Date(),
         }),
       );
     } catch (err) {
