@@ -5,7 +5,8 @@ import CSV from "./utils/csv";
 
 (async () => {
   try {
-    const inventory = new Inventory();
+    const csv = new CSV();
+    const inventory = await csv.read("data.csv");
     const browser = await firefox.launch({
       headless: true,
     });
@@ -34,7 +35,6 @@ import CSV from "./utils/csv";
     // console.log(`Found ${inventory.count} vehicles`);
     await context.close();
     await browser.close();
-    const csv = new CSV();
     await csv.write("data.csv", inventory);
   } catch (err) {
     console.error(err);
