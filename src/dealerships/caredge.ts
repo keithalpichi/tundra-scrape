@@ -21,6 +21,10 @@ class CarEdge extends Site implements Scrapable {
       if ((await welcomeModalLocator.count()) === 1) {
         welcomeModalLocator.click();
       }
+      const closeIconLocator = page.locator(".closeIcon");
+      if ((await closeIconLocator.count()) === 1) {
+        closeIconLocator.click();
+      }
       await page.locator(".listings_cardContainer__SbXnS").waitFor();
       const hits = await page
         .locator(".vehicle-card_vehicleCardContainer___2DV3")
@@ -28,7 +32,7 @@ class CarEdge extends Site implements Scrapable {
 
       for (const hit of hits) {
         const hitLinkLocator = hit.locator(
-          ".vehicle-card_cardDetailsSection__XwUdl > a",
+          ".vehicle-card_cardDetailsSection__XwUdl > a"
         );
         const attr = await hitLinkLocator.getAttribute("href");
         if (!attr) {
@@ -57,7 +61,7 @@ class CarEdge extends Site implements Scrapable {
   async scrapeVehicle(
     context: BrowserContext,
     url: string,
-    inventory: Inventory,
+    inventory: Inventory
   ) {
     try {
       await context.clearCookies();
@@ -66,10 +70,7 @@ class CarEdge extends Site implements Scrapable {
       const pageWaitLocator = page.locator("#ceWideMain");
       await pageWaitLocator.waitFor();
 
-      const vinParentLocator = page
-        .locator(".vdp-heading_vehicleDetails__FNYDL > p")
-        .first()
-        .filter({ hasText: "VIN:" });
+      const vinParentLocator = page.getByText("VIN:");
 
       const vin = await vinParentLocator
         .locator(".vdp-heading_detailValue__Ix4aU")
@@ -82,42 +83,36 @@ class CarEdge extends Site implements Scrapable {
       console.log(`New vehicle with VIN ${vin} found`);
 
       const infoLocator = page.locator(
-        ".vdp-heading_detailsContainer__sFJv1 > h1",
+        ".vdp-heading_detailsContainer__sFJv1 > h1"
       );
       const info = (await infoLocator.innerText()).split(" ");
       const year = info[0];
       const trim = info[3];
       const driveTrain = info[4];
 
-      const stockParentLocator = page
-        .locator(".vdp-heading_vehicleDetails__FNYDL > p")
-        .nth(1)
-        .filter({ hasText: "Stock#:" });
+      const stockParentLocator = page.getByText("Stock#:");
 
       const stock = await stockParentLocator
         .locator(".vdp-heading_detailValue__Ix4aU")
         .innerText();
 
       const pricingAndCTALocator = page.locator(
-        ".vdp-heading_priceAndActionContainer__2r6Dm",
+        ".vdp-heading_priceAndActionContainer__2r6Dm"
       );
       const priceLocator = pricingAndCTALocator
         .locator(".heading_lineItem__gtuJF > h2")
         .first();
       const price = await priceLocator.innerText();
 
-      const mileageLocator = page
-        .locator(".vdp-heading_vehicleDetails__FNYDL > p")
-        .nth(2)
-        .filter({ hasText: "Mileage:" });
+      const mileageLocator = page.getByText("Mileage:");
+      // .locator(".vdp-heading_vehicleDetails__FNYDL > p")
+      // .nth(2)
+      // .filter({ hasText: "Mileage:" });
       const mileage = await mileageLocator
         .locator(".vdp-heading_detailValue__Ix4aU")
         .innerText();
 
-      const daysOnMarketLocator = page
-        .locator(".vdp-heading_vehicleDetails__FNYDL > p")
-        .last()
-        .filter({ hasText: "Days on Market:" });
+      const daysOnMarketLocator = page.getByText("Days on Market:");
       const daysOnMarketString = await daysOnMarketLocator
         .locator(".vdp-heading_detailValue__Ix4aU")
         .innerText();
@@ -126,10 +121,10 @@ class CarEdge extends Site implements Scrapable {
         : Number(daysOnMarketString);
 
       const dealershipLocator = page.locator(
-        ".seller-details_sellerContactInfo__QA4Aq",
+        ".seller-details_sellerContactInfo__QA4Aq"
       );
       const dealershipNameLocator = dealershipLocator.locator(
-        "#vdpSellerDetailsUrl",
+        "#vdpSellerDetailsUrl"
       );
       const dealershipUrl =
         (await dealershipNameLocator.getAttribute("href")) || "Unknown";
@@ -148,7 +143,7 @@ class CarEdge extends Site implements Scrapable {
         .getByRole("listitem")
         .filter({ hasText: "Exterior:" });
       const exteriorColorParts = (await exteriorColorLocator.innerText()).split(
-        ":",
+        ":"
       );
       const exteriorColor =
         exteriorColorParts[exteriorColorParts.length - 1].trim();
@@ -177,7 +172,7 @@ class CarEdge extends Site implements Scrapable {
           daysOnMarket,
           dealership,
           dateFound: new Date(),
-        }),
+        })
       );
     } catch (err) {
       console.error(err);
